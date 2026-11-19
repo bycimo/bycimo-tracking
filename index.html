@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -540,8 +541,8 @@
         thDue: "PELUNASAN",
         empty: "Data tidak ditemukan. Pastikan Nama Depan dan Email sudah sesuai.",
         scrollHint: "Geser tabel ke kanan untuk melihat Qty, Total, DP, dan Pelunasan →",
-        payTitle: "💳 Info Rekening Pelunasan ByCimo",
-        payNote: "QRIS > Rp 100.000 wajib +0.3%",
+        payTitle: "💳 Info Rekening Pelunasan ByCimo (Arrived INA)",
+        payNote: "Hanya item Arrived INA • QRIS > Rp 100.000 wajib +0.3%",
         copyBtn: "Salin No. Rek",
         copiedBtn: "Tersalin ✓",
         confirmWa: (amount) => `Konfirmasi Pelunasan ke Admin (${amount})`
@@ -571,8 +572,8 @@
         thDue: "BALANCE",
         empty: "No matching orders found. Please check your First Name and Email.",
         scrollHint: "Scroll table horizontally to view Qty, Total, DP, and Balance →",
-        payTitle: "💳 ByCimo Payment Account Details",
-        payNote: "QRIS > Rp 100,000 requires +0.3%",
+        payTitle: "💳 ByCimo Payment Account Details (Arrived INA)",
+        payNote: "Arrived INA items only • QRIS > Rp 100,000 requires +0.3%",
         copyBtn: "Copy Acc.",
         copiedBtn: "Copied ✓",
         confirmWa: (amount) => `Confirm Payment to Admin (${amount})`
@@ -703,6 +704,7 @@
       let sumTotal = 0;
       let sumDp = 0;
       let sumPelunasan = 0;
+      let sumArrivedPelunasan = 0;
 
       const rowsHtml = filtered.map(item => {
         const rawTotal = item.total ?? item.harga ?? item.Total ?? item.Harga ?? 0;
@@ -712,6 +714,16 @@
         const isDoneYes = (item.done || "").toString().trim().toLowerCase() === "yes";
         const pelunasanVal = isDoneYes ? 0 : (totalVal - dpVal);
         const qtyVal = getQtyValue(item);
+
+        const statusLower = String(item.status || "").toLowerCase();
+        const isArrivedIna =
+          statusLower.includes("arrived ina") ||
+          statusLower.includes("arrive") ||
+          statusLower.includes("indo");
+
+        if (!isDoneYes && isArrivedIna) {
+          sumArrivedPelunasan += pelunasanVal;
+        }
 
         sumTotal += totalVal;
         sumDp += dpVal;
@@ -737,8 +749,8 @@
         `;
       }).join("");
 
-      const formattedDue = formatRp(sumPelunasan);
-      const waMsg = `Halo min ByCimo, aku mau konfirmasi pelunasan atas nama ${lastSearchedName} dengan total pelunasan ${formattedDue}.`;
+      const formattedDue = formatRp(sumArrivedPelunasan);
+      const waMsg = `Halo min ByCimo, aku mau konfirmasi pelunasan untuk item Arrived INA atas nama ${lastSearchedName} dengan total pelunasan ${formattedDue}.`;
 
       out.innerHTML = `
         <div class="showing-text">${t.showing(filtered.length, allOrders.length, lastSearchedName)}</div>
@@ -753,7 +765,7 @@
           </div>
           <div class="summary-box">
             <span>${t.sumPelunasan}</span>
-            <strong class="${sumPelunasan < 0 ? "minus" : (sumPelunasan === 0 ? "lunas" : "")}">${formattedDue}</strong>
+            <strong class="${sumPelunasan < 0 ? "minus" : (sumPelunasan === 0 ? "lunas" : "")}">${formatRp(sumPelunasan)}</strong>
           </div>
         </div>
         <div class="table-card">
